@@ -100,4 +100,4 @@ We welcome contributions! 🎉
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/your-username).
+Made with ❤️ by [Welton Addra](https://github.com/weltonaddra).

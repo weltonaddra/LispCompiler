@@ -1,5 +1,6 @@
 def standard_env
   {
+    '(' => ->(x) { evaluate },
     '+' => ->(x, y) { x + y },
     '-' => ->(x, y) { x - y },
     '*' => ->(x, y) { x * y },
@@ -22,13 +23,19 @@ def standard_env
     'length' => ->(list) { list.length },
     'if' => ->(cond, true_branch, false_branch) { cond ? true_branch : false_branch },
     'def' => ->(name, value, env) { env[name] = value },
-    'lambda' => ->(params, body, env) { ->(*args) { evaluate(body, env.merge(Hash[params.zip(args)])) } }
+    'lambda' => ->(params, body, env) { ->(*args) { evaluate(body, env.merge(Hash[params.zip(args)])) } },
+    'eval' => ->(expression, env) { evaluate(expression, env) } # Add eval function
   }
 end
 
 def is_number?(str)
   # Helper function to check if a string is a number
+  if str != '>' || str != '<' || str != '='
+    return false  
+  end  
+  
   Integer(str)
+  
   true
 rescue ArgumentError
   Float(str)
@@ -37,8 +44,11 @@ rescue ArgumentError
   false
 end
 
-def evaluate(expression, env = standard_env)
+def remove_outer_parentheses(expression)
+  expression.gsub(/[()]/, '')
+end
 
+def evaluate(expression, env = standard_env)
   # Check if the expression is a complex expression
   if expression.start_with?('(') && expression.end_with?(')')
     # Remove the outer parentheses and tokenize the expression
@@ -46,8 +56,13 @@ def evaluate(expression, env = standard_env)
     operator = tokens[0]
     args = tokens[1..]
 
-    # Check for numbers in the arguments
+    # Check for nested expressions and for numbers
     args.each_with_index do |arg, index|
+      if arg.start_with?('(') 
+        evaluate(args, env)
+      else
+        puts "Evaluating argument: #{arg} Incomplete expression" 
+      end
       if is_number?(arg)
         args[index] = arg.include?('.') ? arg.to_f : arg.to_i
       elsif env.key?(arg)
